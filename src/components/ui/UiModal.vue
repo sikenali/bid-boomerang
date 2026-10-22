@@ -15,6 +15,7 @@ const props = defineProps({
   closeOnEsc: { type: Boolean, default: true },
   showClose: { type: Boolean, default: true },
   showFooter: { type: Boolean, default: true },
+  surface: { type: String, default: 'white' },
   cancelText: { type: String, default: '取消' },
   confirmText: { type: String, default: '确定' },
   confirmDisabled: { type: Boolean, default: false },
@@ -59,6 +60,7 @@ onUnmounted(() => { if (props.modelValue) lockScroll(false); window.removeEventL
       <div v-if="modelValue" class="ui-modal-overlay" @click.self="closeOnClickOverlay && close()">
         <div
           class="ui-modal-panel"
+          :class="`surface-${surface}`"
           :style="{ width: panelWidth, maxWidth: panelMaxWidth, maxHeight: height }"
           role="dialog"
           aria-modal="true"
@@ -127,6 +129,10 @@ onUnmounted(() => { if (props.modelValue) lockScroll(false); window.removeEventL
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+}
+.ui-modal-panel.surface-secondary {
+  background: var(--color-bg-secondary);
+  padding: 28px 32px;
 }
 .ui-modal-header {
   display: flex;

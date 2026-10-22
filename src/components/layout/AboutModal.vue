@@ -19,10 +19,11 @@ const modalVisible = computed({
   <UiModal
     v-model="modalVisible"
     title="关于回旋标"
-    subtitle="文档智能处理平台"
+    subtitle="版本信息、开源仓库与版权声明"
     icon="ri-information-line"
-    width="640"
-    :max-width="720"
+    :width="600"
+    :max-width="600"
+    surface="secondary"
     :show-footer="false"
     :close-on-click-overlay="true"
   >

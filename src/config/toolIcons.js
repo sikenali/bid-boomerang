@@ -1,9 +1,16 @@
-import { RiDownloadCloudLine, RiQuillPenLine, RiListCheck, RiLayoutColumnLine, RiBookOpenLine, RiPriceTagLine } from '@remixicon/vue';
+import {
+  RiDownloadCloudLine,
+  RiQuillPenLine,
+  RiTodoLine,
+  RiLayoutColumnLine,
+  RiBookOpenLine,
+  RiPriceTagLine,
+} from '@remixicon/vue';
 
 export const TOOL_ICON_MAP = {
   'ri-download-cloud-line': RiDownloadCloudLine,
   'ri-quill-pen-line': RiQuillPenLine,
-  'ri-list-check': RiListCheck,
+  'ri-todo-line': RiTodoLine,
   'ri-layout-column-line': RiLayoutColumnLine,
   'ri-book-open-line': RiBookOpenLine,
   'ri-price-tag-line': RiPriceTagLine,

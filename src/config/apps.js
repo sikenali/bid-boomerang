@@ -56,8 +56,8 @@ const APP_META = [
     shortTitle: '文检星',
     desc: '智能校验',
     color: 'green',
-    icon: 'ri-list-check',
-    iconClass: 'ri-list-check',
+    icon: 'ri-todo-line',
+    iconClass: 'ri-todo-line',
   },
   {
     name: 'bid-typesetting',

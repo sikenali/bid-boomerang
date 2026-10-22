@@ -1,28 +1,33 @@
+<script setup>
+import { BRAND_NAME, BRAND_TITLE } from '../../constants/brand';
+
+const currentYear = new Date().getFullYear();
+// 应用版本号：当前为常量，后续打包时从软件版本提取显示
+const appVersion = 'V1.0.0';
+const repoUrl = 'https://github.com/sikenali/bid-boomerang';
+</script>
+
 <template>
   <div class="about-view">
+    <!-- 品牌信息卡片 -->
     <div class="about-card">
-      <div class="about-logo">
-        <RiTargetLine size="64" color="var(--color-primary, #C0392B)" />
+      <div class="about-badge">
+        <RiTargetLine class="badge-logo" size="52" color="#C0392B" />
       </div>
-      <h1 class="about-title">回旋标 · 文档智能处理平台</h1>
-      <p class="about-version">Version 1.0.0</p>
-      <p class="about-desc">
-        基于 Wujie 微前端架构的统一工作台，集成标书信息抽取、生成、排版、报价、比对、校验六大智能工具。
-      </p>
-      <div class="about-info">
-        <div class="info-row">
-          <span class="info-label">架构</span>
-          <span class="info-value">Vue 3 + Vite + Wujie</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">图标库</span>
-          <span class="info-value">RemixIcon</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">设计规范</span>
-          <span class="info-value">DESIGN.md · Parchment 羊皮纸</span>
-        </div>
-      </div>
+
+      <div class="about-name">{{ BRAND_TITLE }}</div>
+
+      <div class="about-slogan">取、制、检、版、比、价，六步成章，回旋有术</div>
+
+      <div class="about-version">版本: {{ appVersion }}</div>
+
+      <a class="about-repo" :href="repoUrl" target="_blank" rel="noopener noreferrer" title="访问 GitHub 仓库">
+        <span class="repo-right">
+          <RiGithubLine class="icon" size="34" />
+        </span>
+      </a>
+
+      <div class="about-copy">© {{ currentYear }} {{ BRAND_NAME }} · sikenali</div>
     </div>
   </div>
 </template>
@@ -30,64 +35,84 @@
 <style scoped>
 .about-view {
   display: flex;
-  justify-content: center;
-  padding: 20px;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1620px;
 }
 
+/* 品牌信息卡片 */
 .about-card {
-  max-width: 480px;
+  background-color: var(--color-bg-white, #FFFFFF);
+  border: 0.7px solid var(--color-border-soft, #EDE9E0);
+  border-radius: 16px;
+  height: 525px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  text-align: center;
+  justify-content: center;
 }
-
-.about-logo {
-  margin-bottom: 8px;
+.about-badge {
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  border: 0.7px solid #E8D9B0;
+  background-color: #FBF5E3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
-.about-title {
-  font-size: 22px;
+.badge-logo {
+  display: inline-flex;
+}
+.about-name {
+  margin-top: 32px;
+  font-size: 24px;
   font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
+  color: var(--color-text-primary, #1F1D1A);
+  font-family: var(--font-family-cn);
+  line-height: 1.2;
 }
-
+.about-slogan {
+  margin-top: 16px;
+  font-size: 16px;
+  color: var(--color-text-secondary, #6E6A60);
+  font-family: var(--font-family-cn);
+  line-height: 1.4;
+}
 .about-version {
-  font-size: 13px;
-  color: var(--color-text-faint);
-  margin: 0;
-}
-
-.about-desc {
+  margin-top: 8px;
   font-size: 14px;
-  color: var(--color-text-body);
-  line-height: 1.6;
-  margin: 8px 0 16px;
+  color: var(--color-text-muted, #8A8578);
+  font-family: var(--font-family-cn);
+  line-height: 1.4;
 }
-
-.about-info {
+.about-repo {
+  margin-top: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+.about-repo:hover {
+  opacity: 0.75;
+}
+.repo-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  display: flex;
-  flex-direction: column;
   gap: 8px;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border-soft);
 }
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
+.repo-right .icon {
+  display: inline-flex;
+  color: var(--color-text-secondary, #6E6A60);
 }
-
-.info-label {
-  color: var(--color-text-muted);
-}
-
-.info-value {
-  color: var(--color-text-body);
-  font-weight: 500;
+.about-copy {
+  margin-top: 32px;
+  font-size: 14px;
+  color: var(--color-text-faint, #A7A296);
+  font-family: var(--font-family-cn);
 }
 </style>
