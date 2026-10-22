@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import TopNav from '../components/TopNav.vue';
 import PageFooter from '../components/PageFooter.vue';
@@ -35,7 +35,6 @@ import BiddingSitesModal from '../components/layout/BiddingSitesModal.vue';
 import AboutModal from '../components/layout/AboutModal.vue';
 import { SUB_APP_LIST } from '../config/apps';
 import { usePreloadStore } from '../stores/preload';
-import { destroySubApp } from '../utils/preload';
 
 const route = useRoute();
 const router = useRouter();
@@ -57,17 +56,15 @@ function goHome() {
 }
 
 /**
- * 当前工具渲染完成后再开始后台预热其余工具：
- * 避免与正在加载的工具抢占带宽，预热完成后点击任意工具都是秒开。
+ * 首次进入工具页时确保后台预热已启动（首页已启动则 no-op）。
+ * 预热在首页首屏完成后就开始了，这里作为兜底，覆盖直接进入 /tool/:name 的场景。
  */
 function onAppReady() {
   preloadStore.start(currentApp.value?.name || '');
 }
 
-onBeforeUnmount(() => {
-  preloadStore.stop();
-  SUB_APP_LIST.forEach((app) => destroySubApp(app.name));
-});
+// 注意：切换工具标签时不再销毁子应用实例，保留预热结果让 6 个标签来回切换都是秒开；
+// 离开工作台（回首页）由 HomeView 触发 stop 清理。
 </script>
 
 <style scoped>

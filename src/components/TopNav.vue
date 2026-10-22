@@ -31,13 +31,13 @@
       >
         预热 {{ preloadWarmed }}/{{ preloadTotal }}
       </span>
-      <UiTip :text="isDark ? '切换浅色主题' : '切换深色主题'" placement="bottom">
+      <UiTip text="主题" placement="bottom">
         <button class="nav-btn" @click="toggleTheme">
           <RiSunLine v-if="isDark" size="18" />
           <RiMoonLine v-else size="18" />
         </button>
       </UiTip>
-      <UiTip :text="showBack ? '返回首页' : '进入统一工作台'" placement="bottom">
+      <UiTip text="首页" placement="bottom">
         <button class="nav-btn" @click="onWorkbenchClick">
           <RiHome4Line size="18" />
         </button>

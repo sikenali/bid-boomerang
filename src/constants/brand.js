@@ -1,2 +1,9 @@
 export const BRAND_NAME = '回旋标';
+export const BRAND_SHORT = '回旋标';
+export const BRAND_PRODUCT = '文档智能处理平台';
 export const BRAND_TITLE = '回旋标 · 文档智能处理平台';
+export const BRAND_SLOGAN = '取、制、检、版、比、价，六步成章，回旋有术';
+export const BRAND_SERIES = '回旋标工具系列';
+export const BRAND_POWERED = 'Powered by LightOS';
+export const BRAND_POWERED_URL = 'https://lazycat.cloud/';
+export const BRAND_YEAR = 2026;

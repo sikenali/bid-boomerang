@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { BRAND_NAME, BRAND_TITLE } from '../../constants/brand';
+import { BRAND_NAME, BRAND_SLOGAN, BRAND_TITLE } from '../../constants/brand';
 
 const currentYear = new Date().getFullYear();
 // 应用版本号：由 vite define 从 package.json 注入，与打包产物版本同源
@@ -51,7 +51,7 @@ onMounted(loadConfig);
 
       <div class="about-name">{{ BRAND_TITLE }}</div>
 
-      <div class="about-slogan">取、制、检、版、比、价，六步成章，回旋有术</div>
+      <div class="about-slogan">{{ BRAND_SLOGAN }}</div>
 
       <div class="about-version">版本: v{{ appVersion }}</div>
 
@@ -92,7 +92,7 @@ onMounted(loadConfig);
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 1620px;
+  max-width: 100%;
 }
 
 /* 品牌信息卡片 */
@@ -100,7 +100,7 @@ onMounted(loadConfig);
   background-color: var(--color-bg-white, #FFFFFF);
   border: 0.7px solid var(--color-border-soft, #EDE9E0);
   border-radius: 16px;
-  height: 525px;
+  min-height: 480px;
   display: flex;
   flex-direction: column;
   align-items: center;

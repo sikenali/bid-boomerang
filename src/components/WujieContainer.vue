@@ -60,7 +60,7 @@ const errorMessage = ref('');
 const elapsed = ref(0);
 
 const LOAD_TIMEOUT = 20000;
-const POLL_INTERVAL = 120;
+const POLL_INTERVAL = 50;
 
 let timer = null;
 let ticker = null;
@@ -111,10 +111,21 @@ function isRendered() {
 
 function startPolling() {
   stopPolling();
-  status.value = 'loading';
   errorMessage.value = '';
+
+  // 切标签场景：preloaded + alive 的子应用常常瞬间就绪，
+  // 先检查再切 loading，彻底避免"闪一下 loading mask"
+  if (isRendered()) {
+    status.value = 'ready';
+    sendContextToSubApp();
+    emit('ready', props.app.name);
+    return;
+  }
+
+  status.value = 'loading';
   startTicker();
   const deadline = Date.now() + LOAD_TIMEOUT;
+
   timer = setInterval(() => {
     if (isRendered()) {
       status.value = 'ready';
