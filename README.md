@@ -68,6 +68,37 @@ VITE_SUBAPP_URLS='{"bid-checker":"https://work.example.com/opc/bid-checker/"}' n
 本地若要以「构建态」联调（单包直出，首屏 < 1s），在子应用目录执行 `npm run build && npm run preview`，
 `preview` 与开发服务同端口且同样放行 CORS，主壳无需改动。
 
+## 版本号口径
+
+**唯一来源：`package.json` 的 `version`。** 其他所有地方都从它派生，不再各写一份：
+
+| 出现位置 | 取值来源 |
+| --- | --- |
+| 安装包 / 应用内「关于」页显示 | 构建期由 vite `define` 注入 `__APP_VERSION__` |
+| 产物文件名 `bid-boomerang-<版本>-<os>-<arch>.<ext>` | electron-builder 读 package.json 的 version |
+| 桌面端窗口标题 | `app.getVersion()`（打包后的 package.json） |
+| GitHub Release 名称 | tag（必须与 package.json 一致） |
+
+发布流程：
+
+```bash
+# 1. 改版本号（唯一需要动的地方）
+npm version 1.0.2 --no-git-tag-version     # 或直接编辑 package.json
+
+# 2. 提交并打同名 tag
+git commit -am "chore(release): v1.0.2"
+git tag v1.0.2
+
+# 3. 推送（tag 会触发 .github/workflows 出包 + 建 Release）
+git push origin main --tags
+```
+
+CI 会在出包前校验 **tag 版本必须等于 package.json 的 version**，不一致直接失败并提示先改版本号，
+避免出现「仓库写 1.0.0、tag 是 v1.0.1、装出来又是 1.0.0」的三方分裂。
+本地手动出包（`npm run package:desktop`）直接使用 package.json 的版本。
+
+> 六个子应用各自独立发布，版本号与主壳互不绑定。
+
 ## 桌面客户端（Electron）
 
 主壳提供 Windows / macOS / Linux 三平台桌面端，产物由 GitHub Actions 打出并挂到 Release：

@@ -3,8 +3,8 @@ import { ref, onMounted } from 'vue';
 import { BRAND_NAME, BRAND_TITLE } from '../../constants/brand';
 
 const currentYear = new Date().getFullYear();
-// 应用版本号：当前为常量，后续打包时从软件版本提取显示
-const appVersion = 'V1.0.0';
+// 应用版本号：由 vite define 从 package.json 注入，与打包产物版本同源
+const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
 const repoUrl = 'https://github.com/sikenali/bid-boomerang';
 
 // 桌面端才提供子应用地址的运行时配置（网页端地址由构建期 VITE_SUBAPP_URLS 决定）
@@ -53,7 +53,7 @@ onMounted(loadConfig);
 
       <div class="about-slogan">取、制、检、版、比、价，六步成章，回旋有术</div>
 
-      <div class="about-version">版本: {{ appVersion }}</div>
+      <div class="about-version">版本: v{{ appVersion }}</div>
 
       <a class="about-repo" :href="repoUrl" target="_blank" rel="noopener noreferrer" title="访问 GitHub 仓库">
         <span class="repo-right">

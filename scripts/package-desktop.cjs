@@ -53,8 +53,12 @@ const steps = [
 ];
 
 /**
- * 覆盖版本号:electron-builder 的版本取自 package.json,CLI 传版本参数不可靠,
- * 这里在出包前直接改写 package.json(仅影响本次构建的工作区)。
+ * 版本号口径:package.json 的 version 为唯一来源。
+ *
+ * - CI(tag 触发):tag 版本必须与 package.json 完全一致,否则直接失败——
+ *   否则会出现「仓库写 1.0.2、tag 是 v1.0.3、装出来又是 1.0.2」的三方分裂。
+ * - 本地手动出包:允许用 RELEASE_VERSION 临时覆盖(仅改工作区),但会打印警告。
+ *
  * 仅接受形如 v1.2.3 / 1.2.3 的版本号,其它值(如分支名 main)一律忽略。
  */
 function applyReleaseVersion() {
@@ -67,10 +71,20 @@ function applyReleaseVersion() {
   }
   const pkgPath = path.join(REPO_ROOT, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-  if (pkg.version === version) return;
+  if (pkg.version === version) {
+    console.log(`  版本号与 package.json 一致:${version}`);
+    return;
+  }
+  if (process.env.CI) {
+    console.error('');
+    console.error(`❌ 版本号不一致:tag=${version},package.json=${pkg.version}`);
+    console.error('   版本口径唯一来源是 package.json,请先改版本号并提交,再打同名 tag。');
+    console.error('');
+    process.exit(1);
+  }
   pkg.version = version;
   fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
-  console.log(`  版本号覆盖为 ${version}`);
+  console.log(`  ⚠️ 本地临时覆盖版本号为 ${version}(仅本次构建的工作区)`);
 }
 
 for (const step of steps) {
