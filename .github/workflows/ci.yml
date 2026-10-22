@@ -133,25 +133,12 @@ jobs:
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps:
-      - name: Download dist artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: bid-boomerang-dist
-          path: dist
-
       - name: Download desktop artifacts
         uses: actions/download-artifact@v4
         with:
           path: releases
           pattern: desktop-*
           merge-multiple: true
-
-      - name: 打包静态站点
-        run: |
-          cd dist
-          zip -qr ../releases/bid-boomerang-shell-${{ github.ref_name }}.zip .
-          cd ..
-          ls -lh releases
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
