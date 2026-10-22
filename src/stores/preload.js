@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { SUB_APP_LIST } from '../config/apps';
-import { warmupSubApp, nextIdle } from '../utils/preload';
+import { warmupSubApp } from '../utils/preload';
 
 const REWARM_INTERVAL = 5 * 60 * 1000;
+/** 预热启动间隔，避免瞬间并发压满 CPU */
+const LAUNCH_GAP = 200;
 
 export const usePreloadStore = defineStore('preload', () => {
   /** idle 未开始 | warming 首次预热中 | ready 已就绪 */
@@ -28,7 +30,8 @@ export const usePreloadStore = defineStore('preload', () => {
   }
 
   /**
-   * 逐个空闲预热子应用：一次只预热一个，避免与当前正在加载的工具抢占带宽。
+   * 预热其余子应用：错峰并行发起（间隔 LAUNCH_GAP），当前工具渲染完成后再启动，
+   * 既不与当前加载抢带宽，又能让剩余工具尽快就绪。
    * skipName 为当前已打开的工具，无需预热。
    *
    * 首轮结束后每 REWARM_INTERVAL 刷新一次入口 HTML 缓存，避免子应用改动后拿到旧入口。
@@ -47,19 +50,19 @@ export const usePreloadStore = defineStore('preload', () => {
 
     const queue = SUB_APP_LIST.filter((app) => app.name !== skipName);
 
-    const step = () => {
-      const app = queue.shift();
-      if (!app) {
+    const launch = (index) => {
+      if (index >= queue.length) {
         status.value = 'ready';
         running = false;
         firstCycle = false;
         timer = setTimeout(() => start(skipName), REWARM_INTERVAL);
         return;
       }
-      warmOne(app).finally(() => nextIdle(step, 1500));
+      warmOne(queue[index]);
+      setTimeout(() => launch(index + 1), LAUNCH_GAP);
     };
 
-    nextIdle(step, 1000);
+    launch(0);
   }
 
   function stop() {
