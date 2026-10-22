@@ -44,8 +44,15 @@ const steps = [
       const args = ['exec', 'electron-builder', '--'];
       if (platformFlag) args.push(...platformArgs);
       // CI 里用 tag 名覆盖版本号:RELEASE_VERSION=v1.2.3 -> -c.version=1.2.3
-      const releaseVersion = (process.env.RELEASE_VERSION || '').replace(/^v/, '').trim();
-      if (releaseVersion) args.push(`-c.version=${releaseVersion}`);
+      // 仅接受形如 v1.2.3 / 1.2.3 的版本号,其它值(如分支名 main)一律忽略,
+      // 否则 electron-builder 会因非法版本号直接失败。
+      const rawVersion = (process.env.RELEASE_VERSION || '').trim();
+      const releaseVersion = rawVersion.replace(/^v/, '');
+      if (/^\d+\.\d+\.\d+([-+][0-9A-Za-z.-]+)?$/.test(releaseVersion)) {
+        args.push(`-c.version=${releaseVersion}`);
+      } else if (rawVersion) {
+        console.log(`  忽略非版本号 RELEASE_VERSION=${rawVersion},使用 package.json 版本`);
+      }
       run('electron-builder', NPM, args);
     },
   },
