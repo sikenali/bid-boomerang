@@ -68,6 +68,51 @@ VITE_SUBAPP_URLS='{"bid-checker":"https://work.example.com/opc/bid-checker/"}' n
 本地若要以「构建态」联调（单包直出，首屏 < 1s），在子应用目录执行 `npm run build && npm run preview`，
 `preview` 与开发服务同端口且同样放行 CORS，主壳无需改动。
 
+## 桌面客户端（Electron）
+
+主壳提供 Windows / macOS / Linux 三平台桌面端，产物由 GitHub Actions 打出并挂到 Release：
+
+| 平台 | 产物 | 备注 |
+| --- | --- | --- |
+| Windows x64 | `回旋标-<版本>-win-x64.exe` | NSIS 安装包 |
+| macOS | `回旋标-<版本>-mac-x64.dmg` / `-mac-arm64.dmg` | Intel 与 Apple Silicon |
+| Linux x64 | `回旋标-<版本>-linux-x64.AppImage` / `.deb` | |
+
+推送 `v*` 标签即触发 `.github/workflows/desktop.yml`：构建主壳 → electron-builder 出包 →
+上传到 GitHub Release。本地需要时用 `npm run package:desktop`（当前平台）或
+`package:desktop:win|mac|linux`。
+
+**为什么主壳跑在 `http://127.0.0.1:<port>` 而不是 `file://`**：Wujie 依赖 `fetch` 拉取子应用资源，
+桌面端内置了一个零依赖的本地静态服务器托管 `dist/`，端口占用时自动改用空闲端口。
+
+### 子应用地址：运行时可配置
+
+同一个安装包适配任意部署，子应用地址有三层来源（后者覆盖前者）：
+
+| 层级 | 来源 | 说明 |
+| --- | --- | --- |
+| 构建期 | `VITE_SUBAPP_URLS` 环境变量 | 打包时烘焙进前端 |
+| 运行期（文件） | `subs.json` 配置文件 | 桌面端「关于」弹窗里可直接编辑保存 |
+| 运行期（环境变量） | `BID_SUBAPP_URLS` 环境变量 | 优先级最高，便于脚本化启动 |
+
+配置文件位置：
+
+- Windows：`%APPDATA%\bid-boomerang\subs.json`
+- macOS：`~/Library/Application Support/bid-boomerang\subs.json`
+- Linux：`~/.config/bid-boomerang\subs.json`
+
+格式与 `VITE_SUBAPP_URLS` 一致（键为应用名，未列出的应用使用默认地址）：
+
+```json
+{
+  "bid-checker": "https://work.example.com/opc/bid-checker/",
+  "bid-quotation": "https://work.example.com/opc/bid-quotation/"
+}
+```
+
+桌面端主进程会把最终生效的覆盖表以 `/runtime-config.js` 注入页面，前端在初始化时同步读取，
+因此**修改后重载窗口即可生效，无需重新打包**。注意：子应用自身需放行 CORS 响应头。
+
 ## License
 
 [GNU GPL-3.0 官方许可协议](https://www.gnu.org/licenses/gpl-3.0.en.html)
