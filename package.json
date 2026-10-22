@@ -1,14 +1,19 @@
 {
   "name": "bid-boomerang",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",
     "dev:all": "bash scripts/start-all.sh",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix"
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix",
+    "electron:dev": "cross-env NODE_ENV=development electron .",
+    "package:desktop": "node scripts/package-desktop.cjs",
+    "package:desktop:win": "node scripts/package-desktop.cjs --win",
+    "package:desktop:mac": "node scripts/package-desktop.cjs --mac",
+    "package:desktop:linux": "node scripts/package-desktop.cjs --linux"
   },
   "dependencies": {
     "@remixicon/vue": "^4.3.0",
@@ -19,6 +24,95 @@
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.2.1",
+    "cross-env": "^7.0.3",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
     "vite": "^6.0.5"
+  },
+  "build": {
+    "appId": "com.wenquxing.bid-boomerang",
+    "productName": "回旋标",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "release",
+      "buildResources": "buildResources"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraMetadata": {
+      "main": "electron/main.cjs"
+    },
+    "extraResources": [
+      {
+        "from": "dist",
+        "to": "dist"
+      }
+    ],
+    "asar": true,
+    "publish": null,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "sign": null,
+      "signingHashAlgorithms": []
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "回旋标",
+      "deleteAppDataOnUninstall": false
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "category": "Office"
+    },
+    "deb": {
+      "priority": "optional",
+      "maintainer": "sikenali <sikenali@users.noreply.github.com>"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "category": "public.app-category.productivity"
+    }
+  },
+  "description": "回旋标 · 文档智能处理平台（Vue3 + Vite + Wujie 微前端主壳）",
+  "author": {
+    "name": "sikenali",
+    "email": "sikenali@users.noreply.github.com"
+  },
+  "license": "GPL-3.0",
+  "homepage": "https://github.com/sikenali/bid-boomerang",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sikenali/bid-boomerang.git"
   }
 }

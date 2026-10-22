@@ -6,6 +6,11 @@
  *   bid-typesetting 5103  bid-quotation  5104
  *   bid-compare    5105   bid-checker    5106
  *
+ * 地址覆盖分两层：
+ *   1. 构建期：环境变量 VITE_SUBAPP_URLS（JSON，键为应用名）
+ *   2. 运行期：桌面端由本地服务注入 window.__SUBAPP_URLS（同格式），
+ *      用于「一个安装包适配任意部署」，优先级高于构建期。
+ *
  * 部署到 nginx 代理路径时，用环境变量覆盖（JSON，键为应用名）：
  *   VITE_SUBAPP_URLS='{"bid-checker":"https://work.example.com/opc/bid-checker/"}'
  */
@@ -18,18 +23,29 @@ const DEFAULT_PORTS = {
   'bid-checker': 5106,
 };
 
-function readUrlOverrides() {
-  const raw = import.meta.env.VITE_SUBAPP_URLS;
+function parseOverrides(raw) {
   if (!raw) return {};
   try {
-    return JSON.parse(raw);
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
   } catch (error) {
-    console.warn('[apps] VITE_SUBAPP_URLS 解析失败，已忽略：', error);
+    console.warn('[apps] 子应用地址覆盖解析失败，已忽略：', error);
     return {};
   }
 }
 
-const URL_OVERRIDES = readUrlOverrides();
+/** 运行期覆盖（桌面端注入） */
+function readRuntimeOverrides() {
+  if (typeof window === 'undefined') return {};
+  return parseOverrides(window.__SUBAPP_URLS__ ? JSON.stringify(window.__SUBAPP_URLS__) : '');
+}
+
+/** 构建期覆盖（环境变量） */
+function readBuildOverrides() {
+  return parseOverrides(import.meta.env.VITE_SUBAPP_URLS);
+}
+
+const URL_OVERRIDES = { ...readBuildOverrides(), ...readRuntimeOverrides() };
 
 const APP_META = [
   {
