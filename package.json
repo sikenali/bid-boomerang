@@ -1,0 +1,24 @@
+{
+  "name": "bid-boomerang",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 5173",
+    "dev:all": "bash scripts/start-all.sh",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix"
+  },
+  "dependencies": {
+    "@remixicon/vue": "^4.3.0",
+    "pinia": "^3.0.1",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0",
+    "wujie-vue3": "^2.1.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.5"
+  }
+}

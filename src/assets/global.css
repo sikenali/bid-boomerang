@@ -1,0 +1,145 @@
+/* ==========================================================================
+   Design System Tokens — bid-boomerang shell-main
+   对齐 DESIGN.md（bid-platform 统一设计规范）
+   ========================================================================== */
+
+:root {
+  /* ── Accent（默认 朱红）───────────────────────────────────────── */
+  --color-primary: #c0392b;
+  --color-primary-soft: #fbe9e7;
+  --color-on-primary: #ffffff;
+
+  /* ── 表面 ─────────────────────────────────────────────────────── */
+  --color-bg-main: #faf7f2;
+  --color-bg-secondary: #f7f3ea;
+  --color-bg-card: #fcfbf8;
+  --color-bg-white: #ffffff;
+  --color-bg-panel: #f7fafe;
+
+  /* ── 文字 ─────────────────────────────────────────────────────── */
+  --color-text-primary: #1f1d1a;
+  --color-text-body: #3a3a3a;
+  --color-text-secondary: #6e6a60;
+  --color-text-muted: #8a8578;
+  --color-text-faint: #a7a296;
+
+  /* ── 边框 ─────────────────────────────────────────────────────── */
+  --color-border: #e5dfd3;
+  --color-border-soft: #ede9e0;
+  --color-border-hover: #d9d2c2;
+
+  /* ── 功能色 ───────────────────────────────────────────────────── */
+  --color-success: #4e9b7a;
+  --color-success-soft: #e4f0ea;
+  --color-info: #4a72a8;
+  --color-info-soft: #e8f0f8;
+  --color-warning: #f39c12;
+  --color-warning-soft: #fef5e7;
+  --color-error: #e74c3c;
+  --color-error-soft: #fadada;
+
+  /* ── 强调色 · Calicat 设计稿专用（六星配色） ───────────────────── */
+  --brand-red: #be3b2e;
+  --brand-red-strong: #c0392b;
+  --brand-red-deep: #8c2a20;
+  --brand-red-soft: #fbe9e7;
+
+  --brand-gold: #c6a45c;
+  --brand-gold-soft: #f7eee0;
+  --brand-gold-strong: #d3a93f;
+
+  --brand-green: #3e8c6e;
+  --brand-green-soft: #e4f0ea;
+
+  --brand-blue: #4a72a8;
+  --brand-blue-soft: #e8f0f8;
+
+  --brand-navy: #5474a3;
+
+  /* ── 圆角体系 ─────────────────────────────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ── 阴影体系 ─────────────────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(31, 29, 26, 0.06);
+  --shadow-sm: 0 2px 8px rgba(31, 29, 26, 0.06);
+  --shadow-md: 0 4px 16px rgba(31, 29, 26, 0.08);
+  --shadow-lg: 0 8px 24px rgba(31, 29, 26, 0.12);
+  --shadow-xl: 0 12px 40px rgba(31, 29, 26, 0.2);
+
+  /* ── 过渡 ─────────────────────────────────────────────────────── */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --t-fast: 150ms;
+  --t-base: 200ms;
+  --t-slow: 300ms;
+
+  /* ── 边框粗细 ─────────────────────────────────────────────────── */
+  --border-hair: 0.7px;
+
+  /* ── 字体 ─────────────────────────────────────────────────────── */
+  --font-family-cn: 'Source Han Sans SC', 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  --font-latin: 'Inter', 'Source Han Sans SC', 'PingFang SC', system-ui, sans-serif;
+
+  /* ── 高度 ─────────────────────────────────────────────────────── */
+  --nav-h: 72px;
+  --footer-h: 58px;
+}
+
+/* ── Dark Theme Tokens ─────────────────────────────────────────────── */
+[data-theme='dark'] {
+  --color-primary: #e05050;
+  --color-primary-soft: #3a2323;
+  --color-on-primary: #ffffff;
+
+  --color-bg-main: #17171a;
+  --color-bg-secondary: #1c1c1f;
+  --color-bg-card: #232324;
+  --color-bg-white: #232324;
+  --color-bg-panel: #1c1c1f;
+
+  --color-text-primary: #f2f3f5;
+  --color-text-body: #dde0e6;
+  --color-text-secondary: #c9cdd4;
+  --color-text-muted: #a7aeb9;
+  --color-text-faint: #86909c;
+
+  --color-border: #2a2b2e;
+  --color-border-soft: #2a2b2e;
+  --color-border-hover: #3a3b3f;
+
+  --color-success: #5cb98c;
+  --color-success-soft: #1d3329;
+  --color-info: #82aedd;
+  --color-info-soft: #1b2a3a;
+  --color-warning: #f2b23e;
+  --color-warning-soft: #38300f;
+  --color-error: #e86a5a;
+  --color-error-soft: #3a2326;
+
+  --brand-red: #e05050;
+  --brand-red-strong: #e05050;
+  --brand-red-deep: #a83838;
+  --brand-red-soft: #3a2323;
+
+  --brand-gold: #d3a93f;
+  --brand-gold-soft: #3a3018;
+  --brand-gold-strong: #e0b84a;
+
+  --brand-green: #5cb98c;
+  --brand-green-soft: #1d3329;
+
+  --brand-blue: #82aedd;
+  --brand-blue-soft: #1b2a3a;
+
+  --brand-navy: #82aedd;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
