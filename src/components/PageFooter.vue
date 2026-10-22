@@ -3,7 +3,7 @@
     <UiTip text="关于回旋标" placement="top">
       <div class="footer-brand" @click="$emit('about')">
         <RiTargetLine size="20" color="var(--color-primary, #C0392B)" />
-        <span class="footer-brand-text">回旋标工具系列</span>
+        <span class="footer-brand-text">{{ BRAND_SERIES }}</span>
       </div>
     </UiTip>
 
@@ -21,20 +21,18 @@
     </div>
 
     <span class="footer-copy">
-      © {{ year }} {{ BRAND_NAME }} · Powered by <a href="https://lazycat.cloud/" target="_blank" rel="noopener noreferrer" class="footer-link">LightOS</a>
+      © {{ year }} {{ BRAND_NAME }} · Powered by <a :href="BRAND_POWERED_URL" target="_blank" rel="noopener noreferrer" class="footer-link">LightOS</a>
     </span>
   </footer>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { BRAND_NAME } from '../constants/brand';
+import { BRAND_NAME, BRAND_SERIES, BRAND_POWERED_URL, BRAND_YEAR } from '../constants/brand';
 import UiTip from './ui/UiTip.vue';
 
 defineEmits(['credit-query', 'bidding-sites', 'about']);
 
-const year = ref(new Date().getFullYear());
-onMounted(() => { year.value = new Date().getFullYear(); });
+const year = BRAND_YEAR;
 </script>
 
 <style scoped>

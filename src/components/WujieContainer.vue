@@ -64,6 +64,8 @@ const POLL_INTERVAL = 50;
 
 let timer = null;
 let ticker = null;
+/** 已注册到 wujie bus 的回调，便于切换标签/卸载时反注册，避免监听器累积 */
+let busCallbacks = {};
 
 const loadHint = computed(() => {
   if (elapsed.value < 3) return '正在拉取子应用资源…';
@@ -96,17 +98,19 @@ function stopTicker() {
 function isRendered() {
   const host = hostRef.value;
   if (!host) return false;
-  const appElement = host.querySelector('wujie-app');
-  if (!appElement || appElement.getAttribute('data-wujie-id') !== props.app.name) return false;
-  const shadow = appElement.shadowRoot;
-  if (!shadow || shadow.childElementCount === 0) return false;
-
-  // 仅有外层骨架不算就绪：等子应用 body 真正渲染出内容
-  const body = shadow.querySelector('body');
-  if (!body || body.childElementCount === 0) return false;
-  if ((body.textContent || '').trim().length > 0) return true;
-  // 纯图形界面（无文本）用尺寸兜底
-  return body.getBoundingClientRect().height > 40;
+  // alive: true 下，切换标签后老的 wujie-app 节点仍在 DOM，需遍历匹配当前 name
+  const appElements = host.querySelectorAll('wujie-app');
+  for (const appElement of appElements) {
+    if (appElement.getAttribute('data-wujie-id') !== props.app.name) continue;
+    const shadow = appElement.shadowRoot;
+    if (!shadow || shadow.childElementCount === 0) return false;
+    const body = shadow.querySelector('body');
+    if (!body || body.childElementCount === 0) return false;
+    if ((body.textContent || '').trim().length > 0) return true;
+    // 纯图形界面（无文本）用尺寸兜底；offsetHeight 比 getBoundingClientRect 便宜
+    return body.offsetHeight > 40;
+  }
+  return false;
 }
 
 function startPolling() {
@@ -164,14 +168,40 @@ function retry() {
   });
 }
 
+/** 安全解析 localStorage JSON（localStorage 可能被外部写入非法内容，不能抛错阻断上下文下发） */
+function readJsonSafe(key, fallback) {
+  const raw = localStorage.getItem(key);
+  if (!raw) return fallback;
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/** 移除已注册的 bus 监听器（切换标签或卸载时调用，避免监听器累积） */
+function unregisterBusCallbacks() {
+  const instance = wujieRef.value?.$wujie || wujieRef.value;
+  if (instance?.bus) {
+    for (const [event, cb] of Object.entries(busCallbacks)) {
+      try { instance.bus.$off(event, cb); } catch { /* ignore */ }
+    }
+  }
+  busCallbacks = {};
+}
+
 /** 下发 token、用户信息、公共上下文给子应用 */
 function sendContextToSubApp() {
   const instance = wujieRef.value?.$wujie || wujieRef.value;
   if (!instance?.bus) return;
 
+  // 先反注册旧监听器：alive 模式下切回标签会重新触发本函数，不反注册会累积
+  unregisterBusCallbacks();
+
   instance.bus.$emit('token', {
     token: localStorage.getItem('token') || '',
-    userInfo: JSON.parse(localStorage.getItem('userInfo') || '{}'),
+    userInfo: readJsonSafe('userInfo', {}),
   });
 
   instance.bus.$emit('context', {
@@ -181,21 +211,14 @@ function sendContextToSubApp() {
     accent: localStorage.getItem('accent') || '#BE3B2E',
   });
 
-  instance.bus.$on('updateTitle', (title) => {
-    emit('message', { type: 'updateTitle', title });
-  });
-
-  instance.bus.$on('taskProgress', (progress) => {
-    emit('message', { type: 'taskProgress', data: progress });
-  });
-
-  instance.bus.$on('agentResult', (result) => {
-    emit('message', { type: 'agentResult', data: result });
-  });
-
-  instance.bus.$on('error', (error) => {
-    emit('message', { type: 'error', data: error });
-  });
+  const on = (event, handler) => {
+    busCallbacks[event] = handler;
+    instance.bus.$on(event, handler);
+  };
+  on('updateTitle', (title) => emit('message', { type: 'updateTitle', title }));
+  on('taskProgress', (progress) => emit('message', { type: 'taskProgress', data: progress }));
+  on('agentResult', (result) => emit('message', { type: 'agentResult', data: result }));
+  on('error', (error) => emit('message', { type: 'error', data: error }));
 }
 
 watch(
@@ -209,6 +232,7 @@ watch(
 onBeforeUnmount(() => {
   stopPolling();
   stopTicker();
+  unregisterBusCallbacks();
 });
 
 defineExpose({ status });

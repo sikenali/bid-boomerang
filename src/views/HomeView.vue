@@ -21,7 +21,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import TopNav from '../components/TopNav.vue';
 import HeroSection from '../components/HeroSection.vue';
@@ -40,6 +40,8 @@ const showCreditModal = ref(false);
 const showBiddingModal = ref(false);
 const showAboutModal = ref(false);
 
+let idleHandle = null;
+
 function onSelectTool(item) {
   router.push(`/tool/${item.name}`);
 }
@@ -54,13 +56,25 @@ function onOpenShell() {
  * - 不再等到第一个子应用渲染完才预热，用户点击 tool-card 时大部分实例已就绪
  * - 用 requestIdleCallback 避免抢首屏带宽，兜底 800ms 后强制启动
  * - 不 stop：从首页跳工具页要延续预热，不能在这里清理
+ * - 卸载时取消未触发的 idle 回调，避免用户已离开仍在后台启动预热
  */
 onMounted(() => {
   const startPreload = () => preloadStore.start('');
   if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
-    window.requestIdleCallback(startPreload, { timeout: 3000 });
+    idleHandle = window.requestIdleCallback(startPreload, { timeout: 3000 });
   } else {
-    setTimeout(startPreload, 800);
+    idleHandle = setTimeout(startPreload, 800);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (idleHandle) {
+    if (typeof window !== 'undefined' && typeof window.cancelIdleCallback === 'function') {
+      window.cancelIdleCallback(idleHandle);
+    } else {
+      clearTimeout(idleHandle);
+    }
+    idleHandle = null;
   }
 });
 </script>

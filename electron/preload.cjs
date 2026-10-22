@@ -6,6 +6,21 @@
  */
 const { contextBridge, ipcRenderer } = require('electron');
 
+/**
+ * 解析命令行参数 `--subapp-urls=<urlencoded JSON>`(由 main.cjs 通过 additionalArguments 传入)。
+ * 解析失败或无参时返回空对象,保持与 apps.js 的 fallback 一致。
+ */
+function readSubAppUrls() {
+  const arg = process.argv.find((a) => a.startsWith('--subapp-urls='));
+  if (!arg) return {};
+  try {
+    const parsed = JSON.parse(decodeURIComponent(arg.slice('--subapp-urls='.length)));
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
 // 运行期子应用地址覆盖(供 src/config/apps.js 读取)
 contextBridge.exposeInMainWorld('__SUBAPP_URLS__', readSubAppUrls());
 

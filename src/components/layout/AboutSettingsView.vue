@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { BRAND_NAME, BRAND_SLOGAN, BRAND_TITLE } from '../../constants/brand';
+import { BRAND_NAME, BRAND_SLOGAN, BRAND_TITLE, BRAND_YEAR } from '../../constants/brand';
 
-const currentYear = new Date().getFullYear();
+const currentYear = BRAND_YEAR;
 // 应用版本号：由 vite define 从 package.json 注入，与打包产物版本同源
 const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
 const repoUrl = 'https://github.com/sikenali/bid-boomerang';

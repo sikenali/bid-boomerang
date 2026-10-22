@@ -202,15 +202,6 @@ function toggleTheme() {
 
 .nav-warmup {
   font-size: 12px;
-  color: var(--color-text-muted);
-  padding: 3px 10px;
-  border-radius: var(--radius-full);
-  background: var(--color-bg-secondary);
-  white-space: nowrap;
-}
-
-.nav-warmup {
-  font-size: 12px;
   color: var(--color-text-faint);
   background: var(--color-bg-secondary);
   border-radius: var(--radius-full);

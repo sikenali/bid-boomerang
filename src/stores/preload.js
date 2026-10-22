@@ -40,6 +40,11 @@ export const usePreloadStore = defineStore('preload', () => {
     // 可通过 VITE_PRELOAD=off 关闭后台预热（低内存机器 / 排查问题时）
     if (import.meta.env.VITE_PRELOAD === 'off') return;
     if (running) return;
+    // 清理上一轮遗留的 5 分钟重新预热定时器，避免多个 setTimeout 堆积
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
     running = true;
     total.value = SUB_APP_LIST.length;
     warmed.value = 0;

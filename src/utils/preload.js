@@ -53,12 +53,3 @@ export async function warmupSubApp(app) {
   });
   return html;
 }
-
-/** 释放预热的子应用实例（离开工作台时调用，避免后台常驻占用内存） */
-export function destroySubApp(name) {
-  try {
-    Wujie.destroyApp(name);
-  } catch (error) {
-    console.warn('[preload] 销毁子应用失败：', name, error);
-  }
-}
