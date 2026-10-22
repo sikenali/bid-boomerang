@@ -64,7 +64,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: desktop-${{ matrix.arch }}
-          path: release/*
+          # 只上传安装包,排除 win-unpacked / linux-unpacked / mac-*.app 等中间产物
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.AppImage
+            release/*.deb
           if-no-files-found: error
 
   publish:
