@@ -31,7 +31,8 @@ async function fetchAppHtml(url) {
 /**
  * 预热单个子应用：
  * 1. 预取入口 HTML 并登记到 wujie 配置缓存，后续启动直接复用，不必重复拉取；
- * 2. 预取入口脚本资源，让 vite / 静态服务器提前完成转换与传输。
+ * 2. 以 exec 模式在后台把子应用真正跑起来（隐藏 sandbox），模块图整体进入浏览器缓存，
+ *    用户点击时只需激活既有实例，秒开。
  *
  * 注意：wujie 的 preloadApp 内部以 requestIdleCallback 调度，重复调用不会重复创建实例。
  */
@@ -48,7 +49,7 @@ export async function warmupSubApp(app) {
     name: app.name,
     url: app.url,
     alive: true,
-    exec: false,
+    exec: true,
   });
   return html;
 }

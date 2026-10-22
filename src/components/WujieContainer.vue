@@ -51,7 +51,7 @@ const props = defineProps({
   app: { type: Object, required: true },
 });
 
-const emit = defineEmits(['back-home', 'message']);
+const emit = defineEmits(['back-home', 'message', 'ready']);
 
 const hostRef = ref(null);
 const wujieRef = ref(null);
@@ -121,6 +121,7 @@ function startPolling() {
       stopPolling();
       stopTicker();
       sendContextToSubApp();
+      emit('ready', props.app.name);
     } else if (Date.now() > deadline) {
       errorMessage.value = '加载超时，请确认该工具的开发服务已启动。';
       status.value = 'error';

@@ -8,7 +8,7 @@
 
     <main class="tool-body">
       <div class="tool-stage">
-        <WujieContainer :app="currentApp" @back-home="goHome" />
+        <WujieContainer :app="currentApp" @back-home="goHome" @ready="onAppReady" />
       </div>
     </main>
 
@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import TopNav from '../components/TopNav.vue';
 import PageFooter from '../components/PageFooter.vue';
@@ -56,10 +56,13 @@ function goHome() {
   router.push('/');
 }
 
-onMounted(() => {
-  // 空闲时后台预热其余工具，首次点击即可秒开
+/**
+ * 当前工具渲染完成后再开始后台预热其余工具：
+ * 避免与正在加载的工具抢占带宽，预热完成后点击任意工具都是秒开。
+ */
+function onAppReady() {
   preloadStore.start(currentApp.value?.name || '');
-});
+}
 
 onBeforeUnmount(() => {
   preloadStore.stop();
