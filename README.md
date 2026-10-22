@@ -75,8 +75,8 @@ VITE_SUBAPP_URLS='{"bid-checker":"https://work.example.com/opc/bid-checker/"}' n
 | 平台 | 产物 | 备注 |
 | --- | --- | --- |
 | Windows x64 | `bid-boomerang-<版本>-win-x64.exe` | NSIS 安装包 |
-| macOS | `bid-boomerang-<版本>-mac-x64.dmg` / `-mac-arm64.dmg` | Intel 与 Apple Silicon |
-| Linux x64 | `bid-boomerang-<版本>-linux-x64.AppImage` / `.deb` | |
+| macOS | `bid-boomerang-<版本>-mac-x64.dmg` / `bid-boomerang-<版本>-mac-arm64.dmg` | Intel 与 Apple Silicon |
+| Linux x64 | `bid-boomerang-<版本>-linux-x86_64.AppImage` / `bid-boomerang-<版本>-linux-amd64.deb` | AppImage / deb |
 
 推送 `v*` 标签即触发 `.github/workflows/desktop.yml`：构建主壳 → electron-builder 出包 →
 上传到 GitHub Release。本地需要时用 `npm run package:desktop`（当前平台）或
