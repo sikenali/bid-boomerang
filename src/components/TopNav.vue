@@ -24,6 +24,13 @@
     </nav>
 
     <div class="nav-right">
+      <span
+        v-if="preloadStatus === 'warming'"
+        class="nav-warmup"
+        title="后台预热子应用，预热完成后点击工具即可秒开"
+      >
+        预热 {{ preloadWarmed }}/{{ preloadTotal }}
+      </span>
       <UiTip :text="isDark ? '切换浅色主题' : '切换深色主题'" placement="bottom">
         <button class="nav-btn" @click="toggleTheme">
           <RiSunLine v-if="isDark" size="18" />
@@ -43,6 +50,7 @@
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useThemeStore } from '../stores/theme';
+import { usePreloadStore } from '../stores/preload';
 import { SUB_APP_LIST } from '../config/apps';
 import { toolIconComponent } from '../config/toolIcons';
 import { BRAND_NAME } from '../constants/brand';
@@ -57,9 +65,13 @@ const emit = defineEmits(['change', 'open-shell']);
 
 const router = useRouter();
 const themeStore = useThemeStore();
+const preloadStore = usePreloadStore();
 
 const showNavItems = computed(() => !!props.activeName);
 const isDark = computed(() => themeStore.currentTheme === 'dark');
+const preloadStatus = computed(() => preloadStore.status);
+const preloadWarmed = computed(() => preloadStore.warmed);
+const preloadTotal = computed(() => preloadStore.total);
 
 function goHome() {
   router.push('/');
@@ -186,6 +198,24 @@ function toggleTheme() {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.nav-warmup {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-secondary);
+  white-space: nowrap;
+}
+
+.nav-warmup {
+  font-size: 12px;
+  color: var(--color-text-faint);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-full);
+  padding: 4px 10px;
+  white-space: nowrap;
 }
 
 .nav-btn {

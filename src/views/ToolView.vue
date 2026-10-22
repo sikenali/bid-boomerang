@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import TopNav from '../components/TopNav.vue';
 import PageFooter from '../components/PageFooter.vue';
@@ -34,9 +34,12 @@ import CreditQualificationModal from '../components/layout/CreditQualificationMo
 import BiddingSitesModal from '../components/layout/BiddingSitesModal.vue';
 import AboutModal from '../components/layout/AboutModal.vue';
 import { SUB_APP_LIST } from '../config/apps';
+import { usePreloadStore } from '../stores/preload';
+import { destroySubApp } from '../utils/preload';
 
 const route = useRoute();
 const router = useRouter();
+const preloadStore = usePreloadStore();
 const showCreditModal = ref(false);
 const showBiddingModal = ref(false);
 const showAboutModal = ref(false);
@@ -52,6 +55,16 @@ function onTabChange(item) {
 function goHome() {
   router.push('/');
 }
+
+onMounted(() => {
+  // 空闲时后台预热其余工具，首次点击即可秒开
+  preloadStore.start(currentApp.value?.name || '');
+});
+
+onBeforeUnmount(() => {
+  preloadStore.stop();
+  SUB_APP_LIST.forEach((app) => destroySubApp(app.name));
+});
 </script>
 
 <style scoped>

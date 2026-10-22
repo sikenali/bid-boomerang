@@ -18,6 +18,7 @@
         <RiLoader4Line class="mask-spinner" size="28" />
         <span class="mask-title">正在载入 {{ app.title }}</span>
         <span class="mask-url">{{ app.url }}</span>
+        <span class="mask-hint">{{ loadHint }}</span>
       </div>
     </div>
 
@@ -43,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onBeforeUnmount } from 'vue';
+import { ref, watch, nextTick, computed, onBeforeUnmount } from 'vue';
 import Wujie from 'wujie-vue3';
 
 const props = defineProps({
@@ -56,16 +57,38 @@ const hostRef = ref(null);
 const wujieRef = ref(null);
 const status = ref('loading');
 const errorMessage = ref('');
+const elapsed = ref(0);
 
 const LOAD_TIMEOUT = 20000;
 const POLL_INTERVAL = 120;
 
 let timer = null;
+let ticker = null;
+
+const loadHint = computed(() => {
+  if (elapsed.value < 3) return '正在拉取子应用资源…';
+  return `开发模式首次加载需实时编译子应用，已等待 ${elapsed.value}s，请稍候…`;
+});
 
 function stopPolling() {
   if (timer) {
     clearInterval(timer);
     timer = null;
+  }
+}
+
+function startTicker() {
+  stopTicker();
+  elapsed.value = 0;
+  ticker = setInterval(() => {
+    elapsed.value += 1;
+  }, 1000);
+}
+
+function stopTicker() {
+  if (ticker) {
+    clearInterval(ticker);
+    ticker = null;
   }
 }
 
@@ -76,23 +99,33 @@ function isRendered() {
   const appElement = host.querySelector('wujie-app');
   if (!appElement || appElement.getAttribute('data-wujie-id') !== props.app.name) return false;
   const shadow = appElement.shadowRoot;
-  return !!shadow && shadow.childElementCount > 0;
+  if (!shadow || shadow.childElementCount === 0) return false;
+
+  // 仅有外层骨架不算就绪：等子应用 body 真正渲染出内容
+  const body = shadow.querySelector('body');
+  if (!body || body.childElementCount === 0) return false;
+  if ((body.textContent || '').trim().length > 0) return true;
+  // 纯图形界面（无文本）用尺寸兜底
+  return body.getBoundingClientRect().height > 40;
 }
 
 function startPolling() {
   stopPolling();
   status.value = 'loading';
   errorMessage.value = '';
+  startTicker();
   const deadline = Date.now() + LOAD_TIMEOUT;
   timer = setInterval(() => {
     if (isRendered()) {
       status.value = 'ready';
       stopPolling();
+      stopTicker();
       sendContextToSubApp();
     } else if (Date.now() > deadline) {
       errorMessage.value = '加载超时，请确认该工具的开发服务已启动。';
       status.value = 'error';
       stopPolling();
+      stopTicker();
     }
   }, POLL_INTERVAL);
 }
@@ -105,6 +138,7 @@ function handleLoadError(src, error) {
     : `资源加载失败：${raw}`;
   status.value = 'error';
   stopPolling();
+  stopTicker();
 }
 
 function retry() {
@@ -160,7 +194,10 @@ watch(
   { immediate: true },
 );
 
-onBeforeUnmount(stopPolling);
+onBeforeUnmount(() => {
+  stopPolling();
+  stopTicker();
+});
 
 defineExpose({ status });
 </script>
@@ -225,6 +262,14 @@ defineExpose({ status });
 .mask-url {
   font-size: 13px;
   color: var(--color-text-faint);
+}
+
+.mask-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  text-align: center;
+  max-width: 320px;
+  line-height: 1.6;
 }
 
 .wujie-error {
