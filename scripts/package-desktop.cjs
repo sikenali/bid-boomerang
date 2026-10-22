@@ -35,6 +35,8 @@ function run(label, command, args, cwd = REPO_ROOT) {
   execFileSync(command, args, { cwd, stdio: 'inherit', shell: useShell });
 }
 
+applyReleaseVersion();
+
 const steps = [
   {
     label: '构建主壳前端',
@@ -45,20 +47,31 @@ const steps = [
     run: () => {
       const args = ['exec', 'electron-builder', '--'];
       if (platformFlag) args.push(...platformArgs);
-      // CI 里用 tag 名覆盖版本号:RELEASE_VERSION=v1.2.3 -> -c.version=1.2.3
-      // 仅接受形如 v1.2.3 / 1.2.3 的版本号,其它值(如分支名 main)一律忽略,
-      // 否则 electron-builder 会因非法版本号直接失败。
-      const rawVersion = (process.env.RELEASE_VERSION || '').trim();
-      const releaseVersion = rawVersion.replace(/^v/, '');
-      if (/^\d+\.\d+\.\d+([-+][0-9A-Za-z.-]+)?$/.test(releaseVersion)) {
-        args.push(`-c.version=${releaseVersion}`);
-      } else if (rawVersion) {
-        console.log(`  忽略非版本号 RELEASE_VERSION=${rawVersion},使用 package.json 版本`);
-      }
       run('electron-builder', NPM, args);
     },
   },
 ];
+
+/**
+ * 覆盖版本号:electron-builder 的版本取自 package.json,CLI 传版本参数不可靠,
+ * 这里在出包前直接改写 package.json(仅影响本次构建的工作区)。
+ * 仅接受形如 v1.2.3 / 1.2.3 的版本号,其它值(如分支名 main)一律忽略。
+ */
+function applyReleaseVersion() {
+  const rawVersion = (process.env.RELEASE_VERSION || '').trim();
+  if (!rawVersion) return;
+  const version = rawVersion.replace(/^v/, '');
+  if (!/^\d+\.\d+\.\d+([-+][0-9A-Za-z.-]+)?$/.test(version)) {
+    console.log(`  忽略非版本号 RELEASE_VERSION=${rawVersion},使用 package.json 版本`);
+    return;
+  }
+  const pkgPath = path.join(REPO_ROOT, 'package.json');
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  if (pkg.version === version) return;
+  pkg.version = version;
+  fs.writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+  console.log(`  版本号覆盖为 ${version}`);
+}
 
 for (const step of steps) {
   step.run();
