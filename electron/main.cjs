@@ -207,6 +207,41 @@ function serveStatic(root) {
   });
 }
 
+// ── 子应用地址(运行期覆盖)─────────────────────────────────────────────
+
+/**
+ * 读取子应用地址覆盖表,优先级:
+ *   1. 环境变量 BID_SUBAPP_URLS(JSON 字符串)
+ *   2. 环境变量 BID_SUBAPP_CONFIG 指向的 JSON 文件
+ *   3. userData/subs.json(用户或部署方放置的配置文件)
+ * 一个安装包即可适配不同部署,无需重新打包。
+ */
+function loadSubAppUrls() {
+  const rawCandidates = [];
+  if (process.env.BID_SUBAPP_URLS) rawCandidates.push(process.env.BID_SUBAPP_URLS);
+  if (process.env.BID_SUBAPP_CONFIG) {
+    try {
+      rawCandidates.push(fs.readFileSync(process.env.BID_SUBAPP_CONFIG, 'utf8'));
+    } catch (error) {
+      console.warn('[desktop] 读取 BID_SUBAPP_CONFIG 失败:', error.message);
+    }
+  }
+  try {
+    rawCandidates.push(fs.readFileSync(path.join(app.getPath('userData'), 'subs.json'), 'utf8'));
+  } catch {
+    // 未配置文件属正常情况,忽略
+  }
+  for (const raw of rawCandidates) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && Object.keys(parsed).length) return parsed;
+    } catch {
+      // 忽略非法 JSON,继续尝试下一个来源
+    }
+  }
+  return {};
+}
+
 // ── 窗口 ───────────────────────────────────────────────────────────────
 
 function createWindow() {
@@ -223,6 +258,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
+      // 把子应用地址表交给 preload,注入 window.__SUBAPP_URLS__
+      additionalArguments: [`--subapp-urls=${encodeURIComponent(JSON.stringify(loadSubAppUrls()))}`],
     },
   });
 
