@@ -30,7 +30,9 @@ const NPM = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 function run(label, command, args, cwd = REPO_ROOT) {
   console.log(`\n▶ ${label}`);
   console.log(`  $ ${command} ${args.join(' ')}`);
-  execFileSync(command, args, { cwd, stdio: 'inherit' });
+  // Windows 下 npm 是 .cmd shim,Node 20.12+ 要求走 shell 才能 spawn,否则报 EINVAL
+  const useShell = process.platform === 'win32';
+  execFileSync(command, args, { cwd, stdio: 'inherit', shell: useShell });
 }
 
 const steps = [
