@@ -2,39 +2,51 @@ import Wujie from 'wujie-vue3';
 
 const HTML_TIMEOUT = 8000;
 
-/**
- * 空闲调度：优先用 requestIdleCallback，没有则退化为 setTimeout
- */
-export function nextIdle(callback, timeout = 1000) {
-  if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
-    window.requestIdleCallback(callback, { timeout });
-    return;
-  }
-  setTimeout(callback, 200);
-}
-
-/** 预取子应用入口 HTML，失败不阻塞主流程 */
+/** 拉取子应用入口 HTML，超时或网络失败抛出错误 */
 async function fetchAppHtml(url) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), HTML_TIMEOUT);
-  try {
-    const response = await fetch(url, { signal: controller.signal, credentials: 'omit' });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-    return await response.text();
-  } finally {
-    clearTimeout(timer);
-  }
+  return new Promise((resolve, reject) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), HTML_TIMEOUT);
+
+    fetch(url, {
+      mode: 'no-cors',
+      signal: controller.signal,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          reject(new Error(`获取入口 HTML 失败：${response.status}`));
+          return;
+        }
+        resolve(response.text());
+      })
+      .catch((error) => {
+        reject(new Error(`无法获取 ${url}`));
+        void error;
+      })
+      .finally(() => clearTimeout(timeout));
+  });
 }
 
 /**
- * 预热单个子应用：
- * 1. 预取入口 HTML 并登记到 wujie 配置缓存，后续启动直接复用，不必重复拉取；
- * 2. 以 exec 模式在后台把子应用真正跑起来（隐藏 sandbox），模块图整体进入浏览器缓存，
- *    用户点击时只需激活既有实例，秒开。
- *
- * 注意：wujie 的 preloadApp 内部以 requestIdleCallback 调度，重复调用不会重复创建实例。
+ * 仅预取子应用入口 HTML 并注入 wujie 配置（不启动子应用 JS）。
+ * 这一步很轻：只多一次 fetch，子应用代码不会执行、不占 CPU 和内存。
+ * 用户真正点击工具卡片时，WujieContainer 才启动子应用。
+ */
+export async function prefetchSubApp(app) {
+  const html = await fetchAppHtml(app.url);
+  Wujie.setupApp({
+    name: app.name,
+    url: app.url,
+    html,
+    alive: true,
+    sync: false,
+  });
+  return html;
+}
+
+/**
+ * 完整预热子应用：拉 HTML + 启动子应用 JS（exec:true）。
+ * 成本高：会占 CPU/内存；仅作为兜底（例如当前工具启动后，把其他常用工具也 exec 起来）。
  */
 export async function warmupSubApp(app) {
   const html = await fetchAppHtml(app.url);
@@ -48,8 +60,49 @@ export async function warmupSubApp(app) {
   Wujie.preloadApp({
     name: app.name,
     url: app.url,
+    html,
     alive: true,
     exec: true,
   });
-  return html;
+}
+
+/**
+ * 强制刷新某个子应用：清缓存 → 重新 fetch HTML → 重新 setup。
+ * 用于开发阶段改了子应用代码后想让 bid-boomerang 立即看到效果。
+ * 生产环境也可用于"重启工具"的手动运维场景。
+ */
+export async function refreshSubApp(app) {
+  try { Wujie.remove(app.name); } catch { /* ignore */ }
+  return prefetchSubApp(app);
+}
+
+/**
+ * 开发者控制台 API：
+ *   window.$refreshSubApp('bid-extractor')   单个刷新
+ *   window.$refreshSubApp()                  全部刷新
+ *   window.$preloadStatus()                  查看当前预热状态
+ * 仅开发模式可用，生产打包后不会暴露。
+ */
+export function installDevApi() {
+  if (import.meta.env.PROD) return;
+
+  window.$refreshSubApp = async (name) => {
+    const { SUB_APP_LIST } = await import('../config/apps');
+    const targets = name
+      ? SUB_APP_LIST.filter((app) => app.name === name)
+      : SUB_APP_LIST;
+    if (!targets.length) {
+      console.warn(`[preload] unknown sub-app: ${name}`);
+      return;
+    }
+    await Promise.all(targets.map(refreshSubApp));
+    console.log(`[preload] refreshed: ${targets.map((a) => a.name).join(', ')}`);
+  };
+
+  window.$preloadStatus = () => {
+    console.log('[preload] usage:');
+    console.log('  $refreshSubApp()               刷新全部子应用（拉最新 HTML）');
+    console.log("  $refreshSubApp('bid-extractor') 只刷新指定的子应用");
+    console.log('  $preloadStatus()               查看当前说明（即本函数）');
+  };
 }

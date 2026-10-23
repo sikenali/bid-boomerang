@@ -25,11 +25,11 @@
 
     <div class="nav-right">
       <span
-        v-if="preloadStatus === 'warming'"
+        v-if="preloadStatus === 'prefetching'"
         class="nav-warmup"
-        title="后台预热子应用，预热完成后点击工具即可秒开"
+        title="后台预取子应用入口，预热完成后点击工具即可秒开"
       >
-        预热 {{ preloadWarmed }}/{{ preloadTotal }}
+        预热 {{ preloadPrefetched }}/{{ preloadTotal }}
       </span>
       <UiTip text="主题" placement="bottom">
         <button class="nav-btn" @click="toggleTheme">
@@ -70,7 +70,7 @@ const preloadStore = usePreloadStore();
 const showNavItems = computed(() => !!props.activeName);
 const isDark = computed(() => themeStore.currentTheme === 'dark');
 const preloadStatus = computed(() => preloadStore.status);
-const preloadWarmed = computed(() => preloadStore.warmed);
+const preloadPrefetched = computed(() => preloadStore.prefetched);
 const preloadTotal = computed(() => preloadStore.total);
 
 function goHome() {

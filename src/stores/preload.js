@@ -1,84 +1,87 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { SUB_APP_LIST } from '../config/apps';
-import { warmupSubApp } from '../utils/preload';
+import { prefetchSubApp, refreshSubApp, installDevApi } from '../utils/preload';
 
-const REWARM_INTERVAL = 5 * 60 * 1000;
-/** 预热启动间隔，避免瞬间并发压满 CPU */
-const LAUNCH_GAP = 200;
+/** 错峰 fetch 间隔，避免瞬间并发压满网络栈 */
+const PREFETCH_GAP = 120;
 
+/**
+ * 预热策略（轻量版）：
+ *   - 首页只 prefetch 入口 HTML（一次 fetch），不启动子应用 JS
+ *   - 用户点击工具卡片时才由 WujieContainer 真正启动子应用（wujie alive:true 会自动保留）
+ *   - 首页预热完成后 300ms，把剩余工具的 HTML 也 fetch 好（用户下次点击时秒开）
+ *   - 开发阶段改代码 → 控制台 window.$refreshSubApp(name) 手动刷新
+ */
 export const usePreloadStore = defineStore('preload', () => {
-  /** idle 未开始 | warming 首次预热中 | ready 已就绪 */
+  /** idle | prefetching | ready */
   const status = ref('idle');
-  const warmed = ref(0);
+  const prefetched = ref(0);
   const total = ref(0);
   const failed = ref([]);
 
-  let timer = null;
   let running = false;
-  let firstCycle = true;
+  const prefetchDone = new Set();
 
-  function warmOne(app) {
-    return warmupSubApp(app)
-      .then(() => {
-        warmed.value += 1;
-      })
-      .catch((error) => {
-        failed.value = [...failed.value, app.name];
-        console.warn('[preload] 预热失败：', app.name, error);
-      });
+  async function prefetchOne(app) {
+    if (prefetchDone.has(app.name)) return;
+    try {
+      await prefetchSubApp(app);
+      prefetchDone.add(app.name);
+      prefetched.value += 1;
+    } catch (error) {
+      failed.value = [...failed.value, app.name];
+      console.warn('[preload] 预取失败：', app.name, error?.message || error);
+    }
   }
 
   /**
-   * 预热其余子应用：错峰并行发起（间隔 LAUNCH_GAP），当前工具渲染完成后再启动，
-   * 既不与当前加载抢带宽，又能让剩余工具尽快就绪。
-   * skipName 为当前已打开的工具，无需预热。
-   *
-   * 首轮结束后每 REWARM_INTERVAL 刷新一次入口 HTML 缓存，避免子应用改动后拿到旧入口。
+   * 启动轻量预热：并发 fetch 所有子应用入口 HTML。
+   * skipName 为当前已打开的工具（跳过）。
    */
   function start(skipName = '') {
-    // 可通过 VITE_PRELOAD=off 关闭后台预热（低内存机器 / 排查问题时）
     if (import.meta.env.VITE_PRELOAD === 'off') return;
     if (running) return;
-    // 清理上一轮遗留的 5 分钟重新预热定时器，避免多个 setTimeout 堆积
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
     running = true;
+    status.value = 'prefetching';
     total.value = SUB_APP_LIST.length;
-    warmed.value = 0;
+    prefetched.value = 0;
     failed.value = [];
-    if (firstCycle) {
-      status.value = 'warming';
-    }
+    prefetchDone.clear();
 
     const queue = SUB_APP_LIST.filter((app) => app.name !== skipName);
+    let index = 0;
 
-    const launch = (index) => {
+    const launch = () => {
       if (index >= queue.length) {
         status.value = 'ready';
         running = false;
-        firstCycle = false;
-        timer = setTimeout(() => start(skipName), REWARM_INTERVAL);
         return;
       }
-      warmOne(queue[index]);
-      setTimeout(() => launch(index + 1), LAUNCH_GAP);
+      const app = queue[index];
+      index += 1;
+      prefetchOne(app);
+      setTimeout(launch, PREFETCH_GAP);
     };
 
-    launch(0);
+    launch();
+  }
+
+  /** 手动刷新某个子应用（供开发用） */
+  async function refresh(name) {
+    const app = SUB_APP_LIST.find((a) => a.name === name);
+    if (!app) return;
+    prefetchDone.delete(app.name);
+    await refreshSubApp(app);
   }
 
   function stop() {
-    if (timer) {
-      clearTimeout(timer);
-      timer = null;
-    }
     running = false;
-    firstCycle = true;
     status.value = 'idle';
   }
 
-  return { status, warmed, total, failed, start, stop };
+  return { status, prefetched, total, failed, start, stop, refresh };
 });
+
+// 只在开发环境注入控制台 API
+installDevApi();

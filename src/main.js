@@ -68,3 +68,12 @@ app.mount('#app');
 
 // 加载主题（在挂载后立即应用持久化主题）
 useThemeStore().loadTheme();
+
+// wujie iframe 沙箱在文档未就绪时触发 Document.addEventListener hook，
+// 属于已知竞态，忽略此类噪音避免刷屏
+const _origError = console.error;
+console.error = function (...args) {
+  const msg = String(args[0] ?? '');
+  if (/wujie-vue3\.js.*addEventListener|single-file-hooks-frames/.test(msg)) return;
+  _origError.apply(console, args);
+};

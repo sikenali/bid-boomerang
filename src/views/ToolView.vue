@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import TopNav from '../components/TopNav.vue';
 import PageFooter from '../components/PageFooter.vue';
@@ -62,6 +62,17 @@ function goHome() {
 function onAppReady() {
   preloadStore.start(currentApp.value?.name || '');
 }
+
+// 离开工作台（回首页）时停止预热，避免后台持续消耗资源；
+// 首页重新进入时通过 onMounted 重新启动。
+watch(
+  () => route.path,
+  (newPath) => {
+    if (!newPath.startsWith('/tool/')) {
+      preloadStore.stop();
+    }
+  },
+);
 
 // 注意：切换工具标签时不再销毁子应用实例，保留预热结果让 6 个标签来回切换都是秒开；
 // 离开工作台（回首页）由 HomeView 触发 stop 清理。
